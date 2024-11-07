@@ -21,23 +21,11 @@ class GazeTracking(object):
         self.calibration = Calibration()
 
         # Initialize MediaPipe Face Mesh
-        self.mp_face_mesh = mp.solutions.face_mesh
-        self.face_mesh = self.mp_face_mesh.FaceMesh(
-            static_image_mode=False,
+        self._predictor = mp.solutions.face_mesh.FaceMesh(
             max_num_faces=1,
             refine_landmarks=True,
             min_detection_confidence=0.5,
-            min_tracking_confidence=0.5
-        )
-
-        # Drawing spec for debugging (optional)
-        self.mp_drawing = mp.solutions.drawing_utils
-        self.drawing_spec = self.mp_drawing.DrawingSpec(thickness=1, circle_radius=1)
-
-        # Suppress TensorFlow Lite XNNPACK delegate info messages
-        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-        tf.get_logger().setLevel('ERROR')
-        
+            min_tracking_confidence=0.5)
 
     @property
     def pupils_located(self):
@@ -54,10 +42,9 @@ class GazeTracking(object):
     def _analyze(self):
         """Detects the face and initialize Eye objects"""
         frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-        faces = self._face_detector(frame)
 
         try:
-            landmarks = self._predictor(frame, faces[0])
+            landmarks = self._predictor.process(frame)
             self.eye_left = Eye(frame, landmarks, 0, self.calibration)
             self.eye_right = Eye(frame, landmarks, 1, self.calibration)
 

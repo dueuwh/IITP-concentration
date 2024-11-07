@@ -10,8 +10,8 @@ class Eye(object):
     initiates the pupil detection.
     """
 
-    LEFT_EYE_POINTS = [36, 37, 38, 39, 40, 41]
-    RIGHT_EYE_POINTS = [42, 43, 44, 45, 46, 47]
+    LEFT_EYE_POINTS = [446, 261, 448, 449, 450, 451, 452, 453, 464, 413, 441, 442, 443, 444, 445, 342]
+    RIGHT_EYE_POINTS = [226, 113, 225, 224, 223, 222, 221, 189, 244, 233, 232, 231, 230, 229, 228, 31]
 
     def __init__(self, original_frame, landmarks, side, calibration):
         self.frame = None
