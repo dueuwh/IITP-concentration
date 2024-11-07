@@ -3,6 +3,8 @@ import numpy as np
 import cv2
 from .pupil import Pupil
 
+# Import necessary components from MediaPipe
+import mediapipe as mp
 
 class Eye(object):
     """
@@ -10,8 +12,9 @@ class Eye(object):
     initiates the pupil detection.
     """
 
-    LEFT_EYE_POINTS = [36, 37, 38, 39, 40, 41]
-    RIGHT_EYE_POINTS = [42, 43, 44, 45, 46, 47]
+    # MediaPipe landmark indices for eyes
+    LEFT_EYE_LANDMARKS = [33, 133, 160, 159, 158, 157, 173, 144, 163, 7]
+    RIGHT_EYE_LANDMARKS = [362, 263, 387, 386, 385, 384, 398, 382, 381, 380]
 
     def __init__(self, original_frame, landmarks, side, calibration):
         self.frame = None
@@ -27,11 +30,11 @@ class Eye(object):
         """Returns the middle point (x,y) between two points
 
         Arguments:
-            p1 (dlib.point): First point
-            p2 (dlib.point): Second point
+            p1 (tuple): First point (x, y)
+            p2 (tuple): Second point (x, y)
         """
-        x = int((p1.x + p2.x) / 2)
-        y = int((p1.y + p2.y) / 2)
+        x = int((p1[0] + p2[0]) / 2)
+        y = int((p1[1] + p2[1]) / 2)
         return (x, y)
 
     def _isolate(self, frame, landmarks, points):
@@ -39,19 +42,17 @@ class Eye(object):
 
         Arguments:
             frame (numpy.ndarray): Frame containing the face
-            landmarks (dlib.full_object_detection): Facial landmarks for the face region
-            points (list): Points of an eye (from the 68 Multi-PIE landmarks)
+            landmarks (list): List of (x, y) tuples for facial landmarks
+            points (list): Points of an eye (MediaPipe landmark indices)
         """
-        region = np.array([(landmarks.part(point).x, landmarks.part(point).y) for point in points])
-        region = region.astype(np.int32)
+        region = np.array([landmarks[point] for point in points], dtype=np.int32)
         self.landmark_points = region
 
         # Applying a mask to get only the eye
         height, width = frame.shape[:2]
-        black_frame = np.zeros((height, width), np.uint8)
-        mask = np.full((height, width), 255, np.uint8)
-        cv2.fillPoly(mask, [region], (0, 0, 0))
-        eye = cv2.bitwise_not(black_frame, frame.copy(), mask=mask)
+        mask = np.zeros((height, width), dtype=np.uint8)
+        cv2.fillPoly(mask, [region], 255)
+        eye = cv2.bitwise_and(frame, frame, mask=mask)
 
         # Cropping on the eye
         margin = 5
@@ -60,27 +61,37 @@ class Eye(object):
         min_y = np.min(region[:, 1]) - margin
         max_y = np.max(region[:, 1]) + margin
 
+        # Ensure the crop area is within frame boundaries
+        min_x = max(min_x, 0)
+        min_y = max(min_y, 0)
+        max_x = min(max_x, width)
+        max_y = min(max_y, height)
+
         self.frame = eye[min_y:max_y, min_x:max_x]
         self.origin = (min_x, min_y)
 
-        height, width = self.frame.shape[:2]
-        self.center = (width / 2, height / 2)
+        # Convert the isolated eye frame to grayscale
+        if len(self.frame.shape) == 3 and self.frame.shape[2] == 3:
+            self.frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+
+        height_eye, width_eye = self.frame.shape[:2]
+        self.center = (width_eye / 2, height_eye / 2)
 
     def _blinking_ratio(self, landmarks, points):
         """Calculates a ratio that can indicate whether an eye is closed or not.
         It's the division of the width of the eye, by its height.
 
         Arguments:
-            landmarks (dlib.full_object_detection): Facial landmarks for the face region
-            points (list): Points of an eye (from the 68 Multi-PIE landmarks)
+            landmarks (list): List of (x, y) tuples for facial landmarks
+            points (list): Points of an eye (MediaPipe landmark indices)
 
         Returns:
             The computed ratio
         """
-        left = (landmarks.part(points[0]).x, landmarks.part(points[0]).y)
-        right = (landmarks.part(points[3]).x, landmarks.part(points[3]).y)
-        top = self._middle_point(landmarks.part(points[1]), landmarks.part(points[2]))
-        bottom = self._middle_point(landmarks.part(points[5]), landmarks.part(points[4]))
+        left = landmarks[points[0]]
+        right = landmarks[points[3]]
+        top = self._middle_point(landmarks[points[1]], landmarks[points[2]])
+        bottom = self._middle_point(landmarks[points[5]], landmarks[points[4]])
 
         eye_width = math.hypot((left[0] - right[0]), (left[1] - right[1]))
         eye_height = math.hypot((top[0] - bottom[0]), (top[1] - bottom[1]))
@@ -98,14 +109,14 @@ class Eye(object):
 
         Arguments:
             original_frame (numpy.ndarray): Frame passed by the user
-            landmarks (dlib.full_object_detection): Facial landmarks for the face region
+            landmarks (list): List of (x, y) tuples for facial landmarks
             side: Indicates whether it's the left eye (0) or the right eye (1)
             calibration (calibration.Calibration): Manages the binarization threshold value
         """
         if side == 0:
-            points = self.LEFT_EYE_POINTS
+            points = self.LEFT_EYE_LANDMARKS
         elif side == 1:
-            points = self.RIGHT_EYE_POINTS
+            points = self.RIGHT_EYE_LANDMARKS
         else:
             return
 

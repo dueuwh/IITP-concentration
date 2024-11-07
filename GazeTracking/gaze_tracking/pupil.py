@@ -1,7 +1,6 @@
 import numpy as np
 import cv2
 
-
 class Pupil(object):
     """
     This class detects the iris of an eye and estimates
@@ -28,6 +27,9 @@ class Pupil(object):
             A frame with a single element representing the iris
         """
         kernel = np.ones((3, 3), np.uint8)
+        # Ensure the eye_frame is in grayscale
+        if len(eye_frame.shape) == 3:
+            eye_frame = cv2.cvtColor(eye_frame, cv2.COLOR_BGR2GRAY)
         new_frame = cv2.bilateralFilter(eye_frame, 10, 15, 15)
         new_frame = cv2.erode(new_frame, kernel, iterations=3)
         new_frame = cv2.threshold(new_frame, threshold, 255, cv2.THRESH_BINARY)[1]
