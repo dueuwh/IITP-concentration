@@ -27,6 +27,10 @@ while True:
         text = "Looking left"
     elif gaze.is_center():
         text = "Looking center"
+    elif gaze.is_below():
+        text = "Looking below"
+    elif gaze.is_above():
+        text = "Looking above"
 
     cv2.putText(frame, text, (90, 60), cv2.FONT_HERSHEY_DUPLEX, 1.6, (147, 58, 31), 2)
 

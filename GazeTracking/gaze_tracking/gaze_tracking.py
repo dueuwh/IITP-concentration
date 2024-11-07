@@ -1,7 +1,8 @@
 from __future__ import division
 import os
 import cv2
-import dlib
+# import dlib
+import mediapipe as mp
 from .eye import Eye
 from .calibration import Calibration
 
@@ -19,13 +20,24 @@ class GazeTracking(object):
         self.eye_right = None
         self.calibration = Calibration()
 
-        # _face_detector is used to detect faces
-        self._face_detector = dlib.get_frontal_face_detector()
+        # Initialize MediaPipe Face Mesh
+        self.mp_face_mesh = mp.solutions.face_mesh
+        self.face_mesh = self.mp_face_mesh.FaceMesh(
+            static_image_mode=False,
+            max_num_faces=1,
+            refine_landmarks=True,
+            min_detection_confidence=0.5,
+            min_tracking_confidence=0.5
+        )
 
-        # _predictor is used to get facial landmarks of a given face
-        cwd = os.path.abspath(os.path.dirname(__file__))
-        model_path = os.path.abspath(os.path.join(cwd, "trained_models/shape_predictor_68_face_landmarks.dat"))
-        self._predictor = dlib.shape_predictor(model_path)
+        # Drawing spec for debugging (optional)
+        self.mp_drawing = mp.solutions.drawing_utils
+        self.drawing_spec = self.mp_drawing.DrawingSpec(thickness=1, circle_radius=1)
+
+        # Suppress TensorFlow Lite XNNPACK delegate info messages
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+        tf.get_logger().setLevel('ERROR')
+        
 
     @property
     def pupils_located(self):
@@ -110,6 +122,16 @@ class GazeTracking(object):
         """Returns true if the user is looking to the center"""
         if self.pupils_located:
             return self.is_right() is not True and self.is_left() is not True
+    
+    def is_below(self):
+        """Returns true if the user is looking to the below"""
+        if self.pupils_located:
+            return False
+    
+    def is_above(self):
+        """Returns true if the user is looking to the above"""
+        if self.pupils_located:
+            return False
 
     def is_blinking(self):
         """Returns true if the user closes his eyes"""
