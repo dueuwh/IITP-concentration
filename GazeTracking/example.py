@@ -16,7 +16,10 @@ while True:
     # We send this frame to GazeTracking to analyze it
     gaze.refresh(frame)
 
-    frame = gaze.annotated_frame()
+    frame, eyeleftorigin0, eyeleftpupilx = gaze.annotated_frame()
+    
+    print(f"gaze.pupil_left_coords: {gaze.pupil_left_coords()}\
+          gaze.pupil_right_coords: {gaze.pupil_right_coords()}\n")
     text = ""
 
     if gaze.is_blinking():

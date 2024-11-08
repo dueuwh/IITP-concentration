@@ -45,8 +45,12 @@ class GazeTracking(object):
 
         try:
             landmarks = self._predictor.process(frame)
-            self.eye_left = Eye(frame, landmarks, 0, self.calibration)
-            self.eye_right = Eye(frame, landmarks, 1, self.calibration)
+            if landmarks.multi_face_landmarks:    
+                self.eye_left = Eye(frame, landmarks, 0, self.calibration)
+                self.eye_right = Eye(frame, landmarks, 1, self.calibration)
+            else:
+                self.eye_left = None
+                self.eye_right = None
 
         except IndexError:
             self.eye_left = None
@@ -134,6 +138,7 @@ class GazeTracking(object):
             color = (0, 255, 0)
             x_left, y_left = self.pupil_left_coords()
             x_right, y_right = self.pupil_right_coords()
+            
             cv2.line(frame, (x_left - 5, y_left), (x_left + 5, y_left), color)
             cv2.line(frame, (x_left, y_left - 5), (x_left, y_left + 5), color)
             cv2.line(frame, (x_right - 5, y_right), (x_right + 5, y_right), color)

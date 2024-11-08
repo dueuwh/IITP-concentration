@@ -10,7 +10,7 @@ class Eye(object):
     initiates the pupil detection.
     """
 
-    LEFT_EYE_POINTS = [446, 261, 448, 449, 450, 451, 452, 453, 464, 413, 441, 442, 443, 444, 445, 342]
+    LEFT_EYE_POINTS = [464, 413, 441, 442, 443, 444, 445, 342, 446, 261, 448, 449, 450, 451, 452, 453]
     RIGHT_EYE_POINTS = [226, 113, 225, 224, 223, 222, 221, 189, 244, 233, 232, 231, 230, 229, 228, 31]
 
     def __init__(self, original_frame, landmarks, side, calibration):
@@ -42,7 +42,10 @@ class Eye(object):
             landmarks (dlib.full_object_detection): Facial landmarks for the face region
             points (list): Points of an eye (from the 68 Multi-PIE landmarks)
         """
-        region = np.array([(landmarks.part(point).x, landmarks.part(point).y) for point in points])
+        region = np.array([(int(landmarks.multi_face_landmarks[0].landmark[point].x * frame.shape[1]), 
+                            int(landmarks.multi_face_landmarks[0].landmark[point].y * frame.shape[0])) 
+                           for point in points])
+        
         region = region.astype(np.int32)
         self.landmark_points = region
 
@@ -71,16 +74,16 @@ class Eye(object):
         It's the division of the width of the eye, by its height.
 
         Arguments:
-            landmarks (dlib.full_object_detection): Facial landmarks for the face region
+            landmarks (mediapipe object): Facial landmarks for the face region
             points (list): Points of an eye (from the 68 Multi-PIE landmarks)
 
         Returns:
             The computed ratio
         """
-        left = (landmarks.part(points[0]).x, landmarks.part(points[0]).y)
-        right = (landmarks.part(points[3]).x, landmarks.part(points[3]).y)
-        top = self._middle_point(landmarks.part(points[1]), landmarks.part(points[2]))
-        bottom = self._middle_point(landmarks.part(points[5]), landmarks.part(points[4]))
+        left = (landmarks.multi_face_landmarks[0].landmark[points[0]].x, landmarks.multi_face_landmarks[0].landmark[points[0]].y)
+        right = (landmarks.multi_face_landmarks[0].landmark[points[8]].x, landmarks.multi_face_landmarks[0].landmark[points[8]].y)
+        top = self._middle_point(landmarks.multi_face_landmarks[0].landmark[points[3]].x, landmarks.multi_face_landmarks[0].landmark[points[5]].y)
+        bottom = self._middle_point(landmarks.multi_face_landmarks[0].landmark[points[12]].x, landmarks.multi_face_landmarks[0].landmark[points[13]].y)
 
         eye_width = math.hypot((left[0] - right[0]), (left[1] - right[1]))
         eye_height = math.hypot((top[0] - bottom[0]), (top[1] - bottom[1]))
@@ -98,16 +101,16 @@ class Eye(object):
 
         Arguments:
             original_frame (numpy.ndarray): Frame passed by the user
-            landmarks (dlib.full_object_detection): Facial landmarks for the face region
+            landmarks (mediapipe object): Facial landmarks for the face region
             side: Indicates whether it's the left eye (0) or the right eye (1)
             calibration (calibration.Calibration): Manages the binarization threshold value
         """
         if side == 0:
-            points = self.LEFT_EYE_POINTS
+            points = LEFT_EYE_POINTS
         elif side == 1:
-            points = self.RIGHT_EYE_POINTS
+            points = RIGHT_EYE_POINTS
         else:
-            return
+            raise ValueError(f"size: {side} wrong value")
 
         self.blinking = self._blinking_ratio(landmarks, points)
         self._isolate(original_frame, landmarks, points)
