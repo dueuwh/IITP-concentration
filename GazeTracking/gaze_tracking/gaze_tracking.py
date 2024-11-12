@@ -50,7 +50,8 @@ class GazeTracking(object):
 
     def _analyze(self):
         """Detects the face and initialize Eye objects"""
-        frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
+        # frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
+        frame = self.frame
         # try:
         landmarks = self._predictor.process(frame)
         if landmarks.multi_face_landmarks:    
@@ -155,5 +156,6 @@ class GazeTracking(object):
             cv2.line(frame, (x_left, y_left - 5), (x_left, y_left + 5), color)
             cv2.line(frame, (x_right - 5, y_right), (x_right + 5, y_right), color)
             cv2.line(frame, (x_right, y_right - 5), (x_right, y_right + 5), color)
-
-        return frame
+            
+        # return frame
+        return self.eye_right.eye_cp

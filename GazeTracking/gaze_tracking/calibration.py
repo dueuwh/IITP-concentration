@@ -10,7 +10,7 @@ class Calibration(object):
     """
 
     def __init__(self):
-        self.nb_frames = 20
+        self.nb_frames = 30  # set for FPS 30 camera
         self.thresholds_left = []
         self.thresholds_right = []
 
@@ -36,7 +36,7 @@ class Calibration(object):
 
         Argument:
             frame (numpy.ndarray): Binarized iris frame
-        """
+        """ 
         frame = frame[5:-5, 5:-5]
         height, width = frame.shape[:2]
         nb_pixels = height * width
