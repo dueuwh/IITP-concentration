@@ -19,9 +19,18 @@ class GazeTracking(object):
         self.eye_left = None
         self.eye_right = None
         self.calibration = Calibration()
+        
+        self.upper_border = 0.65
+        self.bottom_border = 0.35
+        
+        self.landmark_state = 0
+        # 0: self._predictor.process passed and landmarks.multi_face_landmarks is True
+        # 1: self._predictor.process passed but landmarks.multi_face_landmarks is False
+        # 2: self._predictor.process cause Error
 
         # Initialize MediaPipe Face Mesh
-        self._predictor = mp.solutions.face_mesh.FaceMesh(
+        mp_face_mesh = mp.solutions.face_mesh
+        self._predictor = mp_face_mesh.FaceMesh(
             max_num_faces=1,
             refine_landmarks=True,
             min_detection_confidence=0.5,
@@ -41,20 +50,22 @@ class GazeTracking(object):
 
     def _analyze(self):
         """Detects the face and initialize Eye objects"""
-        frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-
-        try:
-            landmarks = self._predictor.process(frame)
-            if landmarks.multi_face_landmarks:    
-                self.eye_left = Eye(frame, landmarks, 0, self.calibration)
-                self.eye_right = Eye(frame, landmarks, 1, self.calibration)
-            else:
-                self.eye_left = None
-                self.eye_right = None
-
-        except IndexError:
+        frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
+        # try:
+        landmarks = self._predictor.process(frame)
+        if landmarks.multi_face_landmarks:    
+            self.eye_left = Eye(frame, landmarks, 0, self.calibration)
+            self.eye_right = Eye(frame, landmarks, 1, self.calibration)
+            self.landmark_state = 0
+        else:
             self.eye_left = None
             self.eye_right = None
+            self.landmark_state = 1
+
+        # except:
+        #     self.eye_left = None
+        #     self.eye_right = None
+        #     self.landmark_state = 2
 
     def refresh(self, frame):
         """Refreshes the frame and analyzes it.
@@ -102,27 +113,28 @@ class GazeTracking(object):
     def is_right(self):
         """Returns true if the user is looking to the right"""
         if self.pupils_located:
-            return self.horizontal_ratio() <= 0.35
+            return self.horizontal_ratio() >= self.upper_border
 
     def is_left(self):
         """Returns true if the user is looking to the left"""
         if self.pupils_located:
-            return self.horizontal_ratio() >= 0.65
+            return self.horizontal_ratio() <= self.bottom_border
 
-    def is_center(self):
-        """Returns true if the user is looking to the center"""
-        if self.pupils_located:
-            return self.is_right() is not True and self.is_left() is not True
-    
     def is_below(self):
         """Returns true if the user is looking to the below"""
         if self.pupils_located:
-            return False
+            return self.vertical_ratio() > self.upper_border
     
     def is_above(self):
         """Returns true if the user is looking to the above"""
         if self.pupils_located:
-            return False
+            return self.vertical_ratio() <= self.bottom_border
+
+    def is_center(self):
+        """Returns true if the user is looking to the center"""
+        if self.pupils_located:
+            return self.is_right() is not True and self.is_left() is not True and self.is_below() is not True and self.is_above() is not True
+
 
     def is_blinking(self):
         """Returns true if the user closes his eyes"""

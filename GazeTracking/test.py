@@ -32,6 +32,7 @@ with mp_face_mesh.FaceMesh(
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         # Process the image and detect face landmarks
+        # print("image.shape: ", image.shape)
         results = face_mesh.process(image)
 
         # Convert the image color back to BGR for rendering

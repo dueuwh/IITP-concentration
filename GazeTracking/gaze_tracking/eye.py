@@ -10,17 +10,27 @@ class Eye(object):
     initiates the pupil detection.
     """
 
-    LEFT_EYE_POINTS = [464, 413, 441, 442, 443, 444, 445, 342, 446, 261, 448, 449, 450, 451, 452, 453]
-    RIGHT_EYE_POINTS = [226, 113, 225, 224, 223, 222, 221, 189, 244, 233, 232, 231, 230, 229, 228, 31]
-
     def __init__(self, original_frame, landmarks, side, calibration):
         self.frame = None
         self.origin = None
         self.center = None
         self.pupil = None
         self.landmark_points = None
-
+        # Eyes with around skin segments
+        # self.LEFT_EYE_POINTS = [464, 413, 441, 442, 443, 444, 445, 342, 446, 261, 448, 449, 450, 451, 452, 453]
+        # self.RIGHT_EYE_POINTS = [226, 113, 225, 224, 223, 222, 221, 189, 244, 233, 232, 231, 230, 229, 228, 31]
+        
+        # Only eyes
+        # self.LEFT_EYE_POINTS = [263, 466, 388, 387, 386, 385, 384, 398, 362, 382, 381, 380, 374, 373, 390, 249]
+        # self.RIGHT_EYE_POINTS = [33, 246, 161, 160, 159, 158, 157, 173, 133, 155, 154, 153, 145, 144, 163, 7]
+        
+        # Eyes with eyelid
+        self.LEFT_EYE_POINTS = [359, 467, 260, 259, 257, 258, 286, 414, 463, 341, 256, 252, 253, 254, 339, 255]
+        self.RIGHT_EYE_POINTS = [243, 190, 56, 28, 27, 29, 30, 247, 130, 25, 110, 24, 23, 22, 26, 112]
+        
         self._analyze(original_frame, landmarks, side, calibration)
+        self.blinking_state = 0
+        
 
     @staticmethod
     def _middle_point(p1, p2):
@@ -30,8 +40,8 @@ class Eye(object):
             p1 (dlib.point): First point
             p2 (dlib.point): Second point
         """
-        x = int((p1.x + p2.x) / 2)
-        y = int((p1.y + p2.y) / 2)
+        x = (p1.x + p2.x) / 2
+        y = (p1.y + p2.y) / 2
         return (x, y)
 
     def _isolate(self, frame, landmarks, points):
@@ -82,17 +92,18 @@ class Eye(object):
         """
         left = (landmarks.multi_face_landmarks[0].landmark[points[0]].x, landmarks.multi_face_landmarks[0].landmark[points[0]].y)
         right = (landmarks.multi_face_landmarks[0].landmark[points[8]].x, landmarks.multi_face_landmarks[0].landmark[points[8]].y)
-        top = self._middle_point(landmarks.multi_face_landmarks[0].landmark[points[3]].x, landmarks.multi_face_landmarks[0].landmark[points[5]].y)
-        bottom = self._middle_point(landmarks.multi_face_landmarks[0].landmark[points[12]].x, landmarks.multi_face_landmarks[0].landmark[points[13]].y)
+        top = self._middle_point(landmarks.multi_face_landmarks[0].landmark[points[3]], landmarks.multi_face_landmarks[0].landmark[points[5]])
+        bottom = self._middle_point(landmarks.multi_face_landmarks[0].landmark[points[12]], landmarks.multi_face_landmarks[0].landmark[points[13]])
 
         eye_width = math.hypot((left[0] - right[0]), (left[1] - right[1]))
         eye_height = math.hypot((top[0] - bottom[0]), (top[1] - bottom[1]))
 
         try:
             ratio = eye_width / eye_height
+            self.blinking_state = True
         except ZeroDivisionError:
             ratio = None
-
+            self.blinking_state = False
         return ratio
 
     def _analyze(self, original_frame, landmarks, side, calibration):
@@ -106,9 +117,9 @@ class Eye(object):
             calibration (calibration.Calibration): Manages the binarization threshold value
         """
         if side == 0:
-            points = LEFT_EYE_POINTS
+            points = self.LEFT_EYE_POINTS
         elif side == 1:
-            points = RIGHT_EYE_POINTS
+            points = self.RIGHT_EYE_POINTS
         else:
             raise ValueError(f"size: {side} wrong value")
 

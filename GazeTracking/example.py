@@ -7,7 +7,10 @@ import cv2
 from gaze_tracking import GazeTracking
 
 gaze = GazeTracking()
-webcam = cv2.VideoCapture(0)
+rolling_eye = "../data/IITP_눈_돌리기.mp4"
+rolling_head = "../data/IITP_고개_돌리기.mp4"
+camera = 0
+webcam = cv2.VideoCapture(camera)
 
 while True:
     # We get a new frame from the webcam
@@ -16,24 +19,32 @@ while True:
     # We send this frame to GazeTracking to analyze it
     gaze.refresh(frame)
 
-    frame, eyeleftorigin0, eyeleftpupilx = gaze.annotated_frame()
+    frame = gaze.annotated_frame()
     
-    print(f"gaze.pupil_left_coords: {gaze.pupil_left_coords()}\
-          gaze.pupil_right_coords: {gaze.pupil_right_coords()}\n")
     text = ""
 
     if gaze.is_blinking():
         text = "Blinking"
-    elif gaze.is_right():
+    elif gaze.is_right() and not gaze.is_below() and not gaze.is_above():
         text = "Looking right"
-    elif gaze.is_left():
+    elif gaze.is_right() and gaze.is_below() and not gaze.is_above():
+        text = "Looking bottom right"
+    elif gaze.is_right() and not gaze.is_below() and gaze.is_above():
+        text = "Looking upper right"
+    elif gaze.is_left() and not gaze.is_below() and not gaze.is_above():
         text = "Looking left"
+    elif gaze.is_center() and gaze.is_below() and not gaze.is_above():
+        text = "Looking bottom left"
+    elif gaze.is_below() and not gaze.is_below() and gaze.is_above():
+        text = "Looking upper left"
+    elif gaze.is_above() and not gaze.is_rigth() and not gaze.is_left():
+        text = "Looking upper"
+    elif gaze.is_below() and not gaze.is_right() and not gaze.is_left():
+        text = "Looking bottom"
     elif gaze.is_center():
         text = "Looking center"
-    elif gaze.is_below():
-        text = "Looking below"
-    elif gaze.is_above():
-        text = "Looking above"
+    else:
+        text = "Distracted"
 
     cv2.putText(frame, text, (90, 60), cv2.FONT_HERSHEY_DUPLEX, 1.6, (147, 58, 31), 2)
 
