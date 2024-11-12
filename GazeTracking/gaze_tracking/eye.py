@@ -21,12 +21,12 @@ class Eye(object):
         # self.RIGHT_EYE_POINTS = [226, 113, 225, 224, 223, 222, 221, 189, 244, 233, 232, 231, 230, 229, 228, 31]
         
         # Only eyes
-        self.LEFT_EYE_POINTS = [263, 466, 388, 387, 386, 385, 384, 398, 362, 382, 381, 380, 374, 373, 390, 249]
-        self.RIGHT_EYE_POINTS = [33, 246, 161, 160, 159, 158, 157, 173, 133, 155, 154, 153, 145, 144, 163, 7]
+        # self.LEFT_EYE_POINTS = [263, 466, 388, 387, 386, 385, 384, 398, 362, 382, 381, 380, 374, 373, 390, 249]
+        # self.RIGHT_EYE_POINTS = [33, 246, 161, 160, 159, 158, 157, 173, 133, 155, 154, 153, 145, 144, 163, 7]
         
         # Eyes with eyelid
-        # self.LEFT_EYE_POINTS = [359, 467, 260, 259, 257, 258, 286, 414, 463, 341, 256, 252, 253, 254, 339, 255]
-        # self.RIGHT_EYE_POINTS = [243, 190, 56, 28, 27, 29, 30, 247, 130, 25, 110, 24, 23, 22, 26, 112]
+        self.LEFT_EYE_POINTS = [359, 467, 260, 259, 257, 258, 286, 414, 463, 341, 256, 252, 253, 254, 339, 255]
+        self.RIGHT_EYE_POINTS = [243, 190, 56, 28, 27, 29, 30, 247, 130, 25, 110, 24, 23, 22, 26, 112]
         
         self._analyze(original_frame, landmarks, side, calibration)
         self.blinking_state = 0
@@ -61,18 +61,17 @@ class Eye(object):
 
         # Applying a mask to get only the eye
         height, width = frame.shape[:2]
-        black_frame = np.zeros((height, width), np.uint8)
-        mask = np.full((height, width), 255, np.uint8)
-        cv2.fillPoly(mask, [region], (0, 0, 0))
-        eye = cv2.bitwise_not(black_frame, frame.copy(), mask=mask)
-        # self.eye_cp = eye
-
+        mask = np.zeros((height, width), np.uint8)
+        cv2.fillPoly(mask, [region], (255, 255, 255))
+        eye = cv2.bitwise_and(frame.copy(), frame.copy(), mask=mask)
+        eye = cv2.cvtColor(eye, cv2.COLOR_RGB2GRAY)
+        
         # Cropping on the eye
         margin = 5
-        min_x = np.min(region[:, 0]) - margin
-        max_x = np.max(region[:, 0]) + margin
-        min_y = np.min(region[:, 1]) - margin
-        max_y = np.max(region[:, 1]) + margin
+        min_x = np.min(region[:, 0])
+        max_x = np.max(region[:, 0])
+        min_y = np.min(region[:, 1])
+        max_y = np.max(region[:, 1])
 
         self.frame = eye[min_y:max_y, min_x:max_x]
         self.origin = (min_x, min_y)

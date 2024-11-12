@@ -20,8 +20,10 @@ class GazeTracking(object):
         self.eye_right = None
         self.calibration = Calibration()
         
-        self.upper_border = 0.65
-        self.bottom_border = 0.35
+        self.upper_border = 0.15
+        self.bottom_border = 0.85
+        self.right_border = 0.35
+        self.left_border = 0.65
         
         self.landmark_state = 0
         # 0: self._predictor.process passed and landmarks.multi_face_landmarks is True
@@ -57,16 +59,15 @@ class GazeTracking(object):
         if landmarks.multi_face_landmarks:    
             self.eye_left = Eye(frame, landmarks, 0, self.calibration)
             self.eye_right = Eye(frame, landmarks, 1, self.calibration)
-            self.landmark_state = 0
+            self.landmark_state = 1000
         else:
             self.eye_left = None
             self.eye_right = None
-            self.landmark_state = 1
-
+            self.landmark_state = 1001
         # except:
         #     self.eye_left = None
         #     self.eye_right = None
-        #     self.landmark_state = 2
+        #     self.landmark_state = 1002
 
     def refresh(self, frame):
         """Refreshes the frame and analyzes it.
@@ -114,22 +115,22 @@ class GazeTracking(object):
     def is_right(self):
         """Returns true if the user is looking to the right"""
         if self.pupils_located:
-            return self.horizontal_ratio() >= self.upper_border
+            return self.horizontal_ratio() >= self.right_border
 
     def is_left(self):
         """Returns true if the user is looking to the left"""
         if self.pupils_located:
-            return self.horizontal_ratio() <= self.bottom_border
+            return self.horizontal_ratio() <= self.left_border
 
     def is_below(self):
         """Returns true if the user is looking to the below"""
         if self.pupils_located:
-            return self.vertical_ratio() > self.upper_border
+            return self.vertical_ratio() > self.bottom_border
     
     def is_above(self):
         """Returns true if the user is looking to the above"""
         if self.pupils_located:
-            return self.vertical_ratio() <= self.bottom_border
+            return self.vertical_ratio() <= self.upper_border
 
     def is_center(self):
         """Returns true if the user is looking to the center"""
@@ -142,6 +143,9 @@ class GazeTracking(object):
         if self.pupils_located:
             blinking_ratio = (self.eye_left.blinking + self.eye_right.blinking) / 2
             return blinking_ratio > 3.8
+
+    def get_direction(self):
+        
 
     def annotated_frame(self):
         """Returns the main frame with pupils highlighted"""
@@ -156,6 +160,6 @@ class GazeTracking(object):
             cv2.line(frame, (x_left, y_left - 5), (x_left, y_left + 5), color)
             cv2.line(frame, (x_right - 5, y_right), (x_right + 5, y_right), color)
             cv2.line(frame, (x_right, y_right - 5), (x_right, y_right + 5), color)
-            
-        # return frame
-        return self.eye_right.eye_cp
+        
+        return frame
+        # return self.eye_left.eye_cp

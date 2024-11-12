@@ -11,7 +11,7 @@ gaze = GazeTracking()
 rolling_eye = "../data/IITP_눈_돌리기.mp4"
 rolling_head = "../data/IITP_고개_돌리기.mp4"
 camera = 0
-webcam = cv2.VideoCapture(camera)
+webcam = cv2.VideoCapture(rolling_eye)
 
 total_time = 0
 distract_time = 0
@@ -26,6 +26,7 @@ while True:
 
     frame = gaze.annotated_frame()
     
+    print("landmark state: ", gaze.landmark_state)
     text = ""
 
     if gaze.is_blinking():
