@@ -66,6 +66,8 @@ class Eye(object):
         eye = cv2.bitwise_and(frame.copy(), frame.copy(), mask=mask)
         eye = cv2.cvtColor(eye, cv2.COLOR_RGB2GRAY)
         
+        self.eye_cp = eye
+        
         # Cropping on the eye
         margin = 5
         min_x = np.min(region[:, 0])
@@ -93,7 +95,7 @@ class Eye(object):
         left = (landmarks.multi_face_landmarks[0].landmark[points[0]].x, landmarks.multi_face_landmarks[0].landmark[points[0]].y)
         right = (landmarks.multi_face_landmarks[0].landmark[points[8]].x, landmarks.multi_face_landmarks[0].landmark[points[8]].y)
         top = self._middle_point(landmarks.multi_face_landmarks[0].landmark[points[3]], landmarks.multi_face_landmarks[0].landmark[points[5]])
-        bottom = self._middle_point(landmarks.multi_face_landmarks[0].landmark[points[12]], landmarks.multi_face_landmarks[0].landmark[points[13]])
+        bottom = self._middle_point(landmarks.multi_face_landmarks[0].landmark[points[11]], landmarks.multi_face_landmarks[0].landmark[points[13]])
 
         eye_width = math.hypot((left[0] - right[0]), (left[1] - right[1]))
         eye_height = math.hypot((top[0] - bottom[0]), (top[1] - bottom[1]))

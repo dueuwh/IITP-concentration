@@ -20,10 +20,11 @@ class GazeTracking(object):
         self.eye_right = None
         self.calibration = Calibration()
         
-        self.upper_border = 0.15
-        self.bottom_border = 0.85
-        self.right_border = 0.35
-        self.left_border = 0.65
+        self.upper_border = 0.71
+        self.bottom_border = 0.80
+        self.right_border = 0.65
+        self.left_border = 0.53
+        self.blinking_ratio = 3.5
         
         self.landmark_state = 0
         # 0: self._predictor.process passed and landmarks.multi_face_landmarks is True
@@ -122,30 +123,43 @@ class GazeTracking(object):
         if self.pupils_located:
             return self.horizontal_ratio() <= self.left_border
 
-    def is_below(self):
-        """Returns true if the user is looking to the below"""
+    def is_bottom(self):
+        """Returns true if the user is looking to the bottom"""
         if self.pupils_located:
             return self.vertical_ratio() > self.bottom_border
     
-    def is_above(self):
-        """Returns true if the user is looking to the above"""
+    def is_upper(self):
+        """Returns true if the user is looking to the upper"""
         if self.pupils_located:
             return self.vertical_ratio() <= self.upper_border
 
     def is_center(self):
         """Returns true if the user is looking to the center"""
         if self.pupils_located:
-            return self.is_right() is not True and self.is_left() is not True and self.is_below() is not True and self.is_above() is not True
+            return self.is_right() is not True and self.is_left() is not True and self.is_bottom() is not True and self.is_upper() is not True
 
 
     def is_blinking(self):
         """Returns true if the user closes his eyes"""
         if self.pupils_located:
             blinking_ratio = (self.eye_left.blinking + self.eye_right.blinking) / 2
-            return blinking_ratio > 3.8
+            return blinking_ratio > self.blinking_ratio
 
+    # not used
     def get_direction(self):
+        direction = {'upper':[False, 0], 'bottom':[False, 0], 'right':[False, 0], 'left':[False, 0]}
+        if self.is_right():
+            direction['right'] = [True, self.horizontal_ratio() - self.right_border]
+        if self.is_left():
+            direction['left'] = [True, self.horizontal_ratio() - self.left_border]
+        if self.is_upper():
+            direction['upper'] = [True, self.vertical_ratio() - self.upper_border]
+        if self.is_right():
+            direction['bottom'] = [True, self.vertical_ratio() - self.bottom_border]
         
+        for key in direction.keys():
+            if direction[key][0]:
+                pass
 
     def annotated_frame(self):
         """Returns the main frame with pupils highlighted"""
@@ -161,5 +175,8 @@ class GazeTracking(object):
             cv2.line(frame, (x_right - 5, y_right), (x_right + 5, y_right), color)
             cv2.line(frame, (x_right, y_right - 5), (x_right, y_right + 5), color)
         
+        # if self.eye_left is None:
+            # return frame
+        # else:
+        #     return self.eye_left.eye_cp
         return frame
-        # return self.eye_left.eye_cp
