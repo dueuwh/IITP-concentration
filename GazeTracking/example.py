@@ -7,8 +7,7 @@ import cv2
 from gaze_tracking import GazeTracking
 import numpy as np
 
-video_num = input("0 for IITP_눈_돌리기.mp4\n1 for IITP_고개_돌리기.mp4\n2  for webcam with rolling_eye label\nany keys for without label")
-video_select = video_num
+video_select = int(input("0 for IITP_눈_돌리기.mp4\n1 for IITP_고개_돌리기.mp4\n2  for webcam with rolling_eye label\nany keys for without label\ninput: "))
 
 gaze = GazeTracking()
 rolling_eye = "../data/IITP_눈_돌리기.mp4"
@@ -18,15 +17,19 @@ label4rolling_head = [1 for i in range(30*29)] + [0 for i in range(3564)]
 camera = 0
 
 if video_select == 0:
+    print("\nstart rolling eye\n")
     webcam = cv2.VideoCapture(rolling_eye)
     label = label4rolling_eye
 elif video_select == 1:
+    print("\nstart rolling head\n")
     webcam = cv2.VideoCapture(rolling_head)
     label = label4rolling_head
 elif video_select == 2:
+    print("\nstart webcam with rolling eye label\n")
     webcam = cv2.VideoCapture(0)
     label = label4rolling_eye
 else:
+    print("\nstart webcam without label\n")
     webcam = cv2.VideoCapture(0)
     label = False
 fps = 30
