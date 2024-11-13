@@ -21,12 +21,12 @@ import numpy as np
 # cv2.waitKey(0)
 # cv2.destroyAllWindows()
 
-# rolling_eye = "../data/IITP_눈_돌리기.mp4"
-# rolling_head = "../data/IITP_고개_돌리기.mp4"
-# webcam = cv2.VideoCapture(rolling_eye)
+rolling_eye = "../data/IITP_눈_돌리기.mp4"
+rolling_head = "../data/IITP_고개_돌리기.mp4"
+webcam = cv2.VideoCapture(rolling_head)
 
-# print(int(webcam.get(cv2.CAP_PROP_FRAME_COUNT)))
-
-a = [1,2,3]
-b = [1,2,3]
-print(a+b)
+print(int(webcam.get(cv2.CAP_PROP_FRAME_COUNT)))
+if None:
+    print("False")
+else:
+    print("True")
