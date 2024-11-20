@@ -73,30 +73,32 @@ while True:
     text = ""
 
     if gaze.is_blinking():
-        text = "Blinking"
-    # elif gaze.is_right() and not gaze.is_bottom() and not gaze.is_upper():
-    #     text = "Looking right"
-    # elif gaze.is_right() and gaze.is_bottom() and not gaze.is_upper():
-    #     text = "Looking bottom right"
-    # elif gaze.is_right() and not gaze.is_bottom() and gaze.is_upper():
-    #     text = "Looking upper right"
-    # elif gaze.is_left() and not gaze.is_bottom() and not gaze.is_upper():
-    #     text = "Looking left"
-    # elif gaze.is_center() and gaze.is_bottom() and not gaze.is_upper():
-    #     text = "Looking bottom left"
-    # elif gaze.is_bottom() and not gaze.is_bottom() and gaze.is_upper():
-    #     text = "Looking upper left"
-    # elif gaze.is_upper() and not gaze.is_right() and not gaze.is_left():
-    #     text = "Looking upper"
-    # elif gaze.is_bottom() and not gaze.is_right() and not gaze.is_left():
-    #     text = "Looking bottom"
+        text = "Distracted"
+    elif gaze.is_right() and not gaze.is_bottom() and not gaze.is_upper():
+        text = "Distracted"
+    elif gaze.is_right() and gaze.is_bottom() and not gaze.is_upper():
+        text = "Distracted"
+    elif gaze.is_right() and not gaze.is_bottom() and gaze.is_upper():
+        text = "Distracted"
+    elif gaze.is_left() and not gaze.is_bottom() and not gaze.is_upper():
+        text = "Distracted"
+    elif gaze.is_center() and gaze.is_bottom() and not gaze.is_upper():
+        text = "Distracted"
+    elif gaze.is_bottom() and not gaze.is_bottom() and gaze.is_upper():
+        text = "Distracted"
+    elif gaze.is_upper() and not gaze.is_right() and not gaze.is_left():
+        text = "Distractedr"
+    elif gaze.is_bottom() and not gaze.is_right() and not gaze.is_left():
+        text = "Distracted"
     elif gaze.is_center():
         text = "Focus"
     else:
-        text = "Distracted"
+        text = "No face"
     
     if text == "Focus":
         temp_list.append(1)
+    elif text == "No face":
+        temp_list.append(-1)
     else:
         temp_list.append(0)
     
