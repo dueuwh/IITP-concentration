@@ -35,6 +35,8 @@ elif video_select == 2:
 elif video_select == 3:
     print("start webcam with 3min test\nFirst 30sec: looking center\nSecond 30sec: Looking left\nThird 30sec: Looking right\nFourth 30sec: Looking bottom\nFifth 30sec: Looking Upper\nLast 30sec: Looking center")
     webcam = cv2.VideoCapture(0)
+    webcam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+    webcam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
     label = exp_tutorial
 elif video_select == 4:
     print("start EMMA_video_2.mp4 test")
