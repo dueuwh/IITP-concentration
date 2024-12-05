@@ -7,6 +7,7 @@ import cv2
 from gaze_tracking import GazeTracking
 import numpy as np
 import time
+import matplotlib.pyplot as plt
 
 video_select = int(input("0 for IITP_눈_돌리기.mp4\n1 for IITP_고개_돌리기.mp4\n2  for webcam with rolling_eye label\n3 for 3min experiment\n4 for EMMA_video_2.mp4\nany keys for without label\ninput: "))
 
@@ -53,6 +54,7 @@ sec30_accuracy = 0
 min1_accuracy = 0
 min3_accuracy = 0
 start_time = time.time()
+
 while True:
     if video_select == 3:
         if processed_frame_count == 30*30*6:
@@ -68,8 +70,8 @@ while True:
     # We send this frame to GazeTracking to analyze it
     gaze.refresh(frame)
 
-    frame = gaze.annotated_frame()
-
+    frame, left_eye_size, right_eye_size = gaze.annotated_frame()
+    
     text = ""
 
     if gaze.is_blinking():
@@ -93,11 +95,11 @@ while True:
     elif gaze.is_center():
         text = "Focus"
     else:
-        text = "No face"
+        text = "No iris recognition"
     
     if text == "Focus":
         temp_list.append(1)
-    elif text == "No face":
+    elif text == "No iris recognition":
         temp_list.append(-1)
     else:
         temp_list.append(0)
@@ -144,6 +146,22 @@ while True:
                 (90, 200), cv2.FONT_HERSHEY_DUPLEX, 0.5, (147, 58, 31), 2)
     cv2.putText(frame, f"Elapsed time: {int(elapsed_time//3600)}:{int(elapsed_time%3600//60)}:{int(elapsed_time%60)}",
                 (90, 300), cv2.FONT_HERSHEY_DUPLEX, 0.4, (147, 58, 31), 2)
+    cv2.putText(frame, f"Eye size Right:{right_eye_size}, Left: {left_eye_size}",
+                (90, 450), cv2.FONT_HERSHEY_DUPLEX, 0.4, (30, 190, 30), 2)
+
+    if right_eye_size is None or left_eye_size is None:
+        pass
+    else:
+        if right_eye_size[0] < 30 or left_eye_size[0] < 30 or right_eye_size[1] < 40 or left_eye_size[1] < 40:
+            cv2.putText(frame, "Bad environment",
+                        (90, 350), cv2.FONT_HERSHEY_DUPLEX, 1.0, (30, 30, 190), 2)
+            cv2.putText(frame, "The face is too far away from camera",
+                        (90, 380), cv2.FONT_HERSHEY_DUPLEX, 0.6, (30, 30, 190), 2)
+            cv2.putText(frame, "Or the camera resolution is low",
+                        (90, 410), cv2.FONT_HERSHEY_DUPLEX, 0.6, (30, 30, 190), 2)
+        else:
+            cv2.putText(frame, "Good environment",
+                        (90, 350), cv2.FONT_HERSHEY_DUPLEX, 1.0, (30, 190, 30), 2)
 
     left_pupil = gaze.pupil_left_coords()
     right_pupil = gaze.pupil_right_coords()
@@ -155,6 +173,7 @@ while True:
     
     if cv2.waitKey(1) == 27:
         break
+
 if label:
     final_check = [1 for i in range(len(temp_list)) if temp_list[i] == label[i]]
     final_accuracy = round(sum(final_check)/(len(temp_list)), 2)*100

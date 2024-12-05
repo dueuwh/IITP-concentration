@@ -175,8 +175,7 @@ class GazeTracking(object):
             cv2.line(frame, (x_right - 5, y_right), (x_right + 5, y_right), color)
             cv2.line(frame, (x_right, y_right - 5), (x_right, y_right + 5), color)
         
-        # if self.eye_left is None:
-            # return frame
-        # else:
-        #     return self.eye_left.eye_cp
-        return frame
+        if self.eye_left is None or self.eye_right is None:
+            return frame, None, None
+        else:
+            return frame, self.eye_left.pupil.iris_frame.shape, self.eye_right.pupil.iris_frame.shape

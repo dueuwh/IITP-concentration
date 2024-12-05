@@ -5,7 +5,7 @@ import numpy as np
 
 
 # Load the image
-image = cv2.imread('../data/pngtree-puppy-in-clouds-cloud-wallpapers-jpg-image_162864.png')
+image = cv2.imread('C:/Users/U/Pictures/Camera Roll/WIN_20241205_14_15_50_Pro.jpg')
 
 # Define the region of interest (ROI) you want to crop
 # For example, let's say you want to crop a rectangle from (x1, y1) to (x2, y2)

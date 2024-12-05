@@ -66,8 +66,6 @@ class Eye(object):
         eye = cv2.bitwise_and(frame.copy(), frame.copy(), mask=mask)
         eye = cv2.cvtColor(eye, cv2.COLOR_RGB2GRAY)
         
-        self.eye_cp = eye
-        
         # Cropping on the eye
         margin = 5
         min_x = np.min(region[:, 0])
