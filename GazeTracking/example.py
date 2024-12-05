@@ -146,8 +146,6 @@ while True:
                 (90, 200), cv2.FONT_HERSHEY_DUPLEX, 0.5, (147, 58, 31), 2)
     cv2.putText(frame, f"Elapsed time: {int(elapsed_time//3600)}:{int(elapsed_time%3600//60)}:{int(elapsed_time%60)}",
                 (90, 300), cv2.FONT_HERSHEY_DUPLEX, 0.4, (147, 58, 31), 2)
-    cv2.putText(frame, f"Eye size Right:{right_eye_size}, Left: {left_eye_size}",
-                (90, 450), cv2.FONT_HERSHEY_DUPLEX, 0.4, (30, 190, 30), 2)
 
     if right_eye_size is None or left_eye_size is None:
         pass
@@ -159,9 +157,13 @@ while True:
                         (90, 380), cv2.FONT_HERSHEY_DUPLEX, 0.6, (30, 30, 190), 2)
             cv2.putText(frame, "Or the camera resolution is low",
                         (90, 410), cv2.FONT_HERSHEY_DUPLEX, 0.6, (30, 30, 190), 2)
+            cv2.putText(frame, f"Eye size Right:{right_eye_size}, Left: {left_eye_size}",
+                        (90, 450), cv2.FONT_HERSHEY_DUPLEX, 0.4, (30, 30, 190), 2)
         else:
             cv2.putText(frame, "Good environment",
                         (90, 350), cv2.FONT_HERSHEY_DUPLEX, 1.0, (30, 190, 30), 2)
+            cv2.putText(frame, f"Eye size Right:{right_eye_size}, Left: {left_eye_size}",
+                        (90, 450), cv2.FONT_HERSHEY_DUPLEX, 0.4, (30, 190, 30), 2)
 
     left_pupil = gaze.pupil_left_coords()
     right_pupil = gaze.pupil_right_coords()
