@@ -1,10 +1,13 @@
 from __future__ import division
 import os
 import cv2
-import dlib
 from .eye import Eye
 from .calibration import Calibration
 
+# Import necessary components from MediaPipe
+import mediapipe as mp
+import tensorflow as tf
+import warnings
 
 class GazeTracking(object):
     """
@@ -19,13 +22,23 @@ class GazeTracking(object):
         self.eye_right = None
         self.calibration = Calibration()
 
-        # _face_detector is used to detect faces
-        self._face_detector = dlib.get_frontal_face_detector()
+        # Initialize MediaPipe Face Mesh
+        self.mp_face_mesh = mp.solutions.face_mesh
+        self.face_mesh = self.mp_face_mesh.FaceMesh(
+            static_image_mode=False,
+            max_num_faces=1,
+            refine_landmarks=True,
+            min_detection_confidence=0.5,
+            min_tracking_confidence=0.5
+        )
 
-        # _predictor is used to get facial landmarks of a given face
-        cwd = os.path.abspath(os.path.dirname(__file__))
-        model_path = os.path.abspath(os.path.join(cwd, "trained_models/shape_predictor_68_face_landmarks.dat"))
-        self._predictor = dlib.shape_predictor(model_path)
+        # Drawing spec for debugging (optional)
+        self.mp_drawing = mp.solutions.drawing_utils
+        self.drawing_spec = self.mp_drawing.DrawingSpec(thickness=1, circle_radius=1)
+
+        # Suppress TensorFlow Lite XNNPACK delegate info messages
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+        tf.get_logger().setLevel('ERROR')
 
     @property
     def pupils_located(self):
@@ -41,17 +54,28 @@ class GazeTracking(object):
 
     def _analyze(self):
         """Detects the face and initialize Eye objects"""
-        frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-        faces = self._face_detector(frame)
+        # Convert the frame color from BGR to RGB
+        frame_rgb = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
+        results = self.face_mesh.process(frame_rgb)
 
-        try:
-            landmarks = self._predictor(frame, faces[0])
-            self.eye_left = Eye(frame, landmarks, 0, self.calibration)
-            self.eye_right = Eye(frame, landmarks, 1, self.calibration)
-
-        except IndexError:
+        if not results.multi_face_landmarks:
             self.eye_left = None
             self.eye_right = None
+            return
+
+        face_landmarks = results.multi_face_landmarks[0]
+
+        # Convert normalized landmarks to pixel coordinates
+        height, width = self.frame.shape[:2]
+        landmarks = []
+        for lm in face_landmarks.landmark:
+            x = int(lm.x * width)
+            y = int(lm.y * height)
+            landmarks.append((x, y))
+
+        # Initialize left and right eyes
+        self.eye_left = Eye(self.frame, landmarks, 0, self.calibration)
+        self.eye_right = Eye(self.frame, landmarks, 1, self.calibration)
 
     def refresh(self, frame):
         """Refreshes the frame and analyzes it.
@@ -109,10 +133,10 @@ class GazeTracking(object):
     def is_center(self):
         """Returns true if the user is looking to the center"""
         if self.pupils_located:
-            return self.is_right() is not True and self.is_left() is not True
+            return not self.is_right() and not self.is_left()
 
     def is_blinking(self):
-        """Returns true if the user closes his eyes"""
+        """Returns true if the user closes their eyes"""
         if self.pupils_located:
             blinking_ratio = (self.eye_left.blinking + self.eye_right.blinking) / 2
             return blinking_ratio > 3.8

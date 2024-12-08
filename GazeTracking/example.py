@@ -6,12 +6,18 @@ Check the README.md for complete documentation.
 import cv2
 from gaze_tracking import GazeTracking
 
+# Suppress TensorFlow logs (optional, already handled in gaze_tracking.py)
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module='google.protobuf')
+
 gaze = GazeTracking()
 webcam = cv2.VideoCapture(0)
 
 while True:
     # We get a new frame from the webcam
-    _, frame = webcam.read()
+    ret, frame = webcam.read()
+    if not ret:
+        break
 
     # We send this frame to GazeTracking to analyze it
     gaze.refresh(frame)
@@ -32,13 +38,15 @@ while True:
 
     left_pupil = gaze.pupil_left_coords()
     right_pupil = gaze.pupil_right_coords()
-    cv2.putText(frame, "Left pupil:  " + str(left_pupil), (90, 130), cv2.FONT_HERSHEY_DUPLEX, 0.9, (147, 58, 31), 1)
-    cv2.putText(frame, "Right pupil: " + str(right_pupil), (90, 165), cv2.FONT_HERSHEY_DUPLEX, 0.9, (147, 58, 31), 1)
+    cv2.putText(frame, "Left pupil:  " + str(left_pupil), (90, 130),
+                cv2.FONT_HERSHEY_DUPLEX, 0.9, (147, 58, 31), 1)
+    cv2.putText(frame, "Right pupil: " + str(right_pupil), (90, 165),
+                cv2.FONT_HERSHEY_DUPLEX, 0.9, (147, 58, 31), 1)
 
     cv2.imshow("Demo", frame)
 
     if cv2.waitKey(1) == 27:
         break
-   
+
 webcam.release()
 cv2.destroyAllWindows()
