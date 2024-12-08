@@ -1,7 +1,8 @@
 from __future__ import division
 import os
 import cv2
-import dlib
+# import dlib
+import mediapipe as mp
 from .eye import Eye
 from .calibration import Calibration
 
@@ -18,14 +19,25 @@ class GazeTracking(object):
         self.eye_left = None
         self.eye_right = None
         self.calibration = Calibration()
+        
+        self.upper_border = 0.001
+        self.bottom_border = 0.99
+        self.right_border = 0.99
+        self.left_border = 0.001
+        self.blinking_ratio = 1.5
+        
+        self.landmark_state = 0
+        # 0: self._predictor.process passed and landmarks.multi_face_landmarks is True
+        # 1: self._predictor.process passed but landmarks.multi_face_landmarks is False
+        # 2: self._predictor.process cause Error
 
-        # _face_detector is used to detect faces
-        self._face_detector = dlib.get_frontal_face_detector()
-
-        # _predictor is used to get facial landmarks of a given face
-        cwd = os.path.abspath(os.path.dirname(__file__))
-        model_path = os.path.abspath(os.path.join(cwd, "trained_models/shape_predictor_68_face_landmarks.dat"))
-        self._predictor = dlib.shape_predictor(model_path)
+        # Initialize MediaPipe Face Mesh
+        mp_face_mesh = mp.solutions.face_mesh
+        self._predictor = mp_face_mesh.FaceMesh(
+            max_num_faces=1,
+            refine_landmarks=True,
+            min_detection_confidence=0.5,
+            min_tracking_confidence=0.5)
 
     @property
     def pupils_located(self):
@@ -41,17 +53,22 @@ class GazeTracking(object):
 
     def _analyze(self):
         """Detects the face and initialize Eye objects"""
-        frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-        faces = self._face_detector(frame)
-
-        try:
-            landmarks = self._predictor(frame, faces[0])
+        # frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
+        frame = self.frame
+        # try:
+        landmarks = self._predictor.process(frame)
+        if landmarks.multi_face_landmarks:    
             self.eye_left = Eye(frame, landmarks, 0, self.calibration)
             self.eye_right = Eye(frame, landmarks, 1, self.calibration)
-
-        except IndexError:
+            self.landmark_state = 1000
+        else:
             self.eye_left = None
             self.eye_right = None
+            self.landmark_state = 1001
+        # except:
+        #     self.eye_left = None
+        #     self.eye_right = None
+        #     self.landmark_state = 1002
 
     def refresh(self, frame):
         """Refreshes the frame and analyzes it.
@@ -99,23 +116,50 @@ class GazeTracking(object):
     def is_right(self):
         """Returns true if the user is looking to the right"""
         if self.pupils_located:
-            return self.horizontal_ratio() <= 0.35
+            return self.horizontal_ratio() >= self.right_border
 
     def is_left(self):
         """Returns true if the user is looking to the left"""
         if self.pupils_located:
-            return self.horizontal_ratio() >= 0.65
+            return self.horizontal_ratio() <= self.left_border
+
+    def is_bottom(self):
+        """Returns true if the user is looking to the bottom"""
+        if self.pupils_located:
+            return self.vertical_ratio() > self.bottom_border
+    
+    def is_upper(self):
+        """Returns true if the user is looking to the upper"""
+        if self.pupils_located:
+            return self.vertical_ratio() <= self.upper_border
 
     def is_center(self):
         """Returns true if the user is looking to the center"""
         if self.pupils_located:
-            return self.is_right() is not True and self.is_left() is not True
+            return self.is_right() is not True and self.is_left() is not True and self.is_bottom() is not True and self.is_upper() is not True
+
 
     def is_blinking(self):
         """Returns true if the user closes his eyes"""
         if self.pupils_located:
             blinking_ratio = (self.eye_left.blinking + self.eye_right.blinking) / 2
-            return blinking_ratio > 3.8
+            return blinking_ratio > self.blinking_ratio
+
+    # not used
+    def get_direction(self):
+        direction = {'upper':[False, 0], 'bottom':[False, 0], 'right':[False, 0], 'left':[False, 0]}
+        if self.is_right():
+            direction['right'] = [True, self.horizontal_ratio() - self.right_border]
+        if self.is_left():
+            direction['left'] = [True, self.horizontal_ratio() - self.left_border]
+        if self.is_upper():
+            direction['upper'] = [True, self.vertical_ratio() - self.upper_border]
+        if self.is_right():
+            direction['bottom'] = [True, self.vertical_ratio() - self.bottom_border]
+        
+        for key in direction.keys():
+            if direction[key][0]:
+                pass
 
     def annotated_frame(self):
         """Returns the main frame with pupils highlighted"""
@@ -125,9 +169,13 @@ class GazeTracking(object):
             color = (0, 255, 0)
             x_left, y_left = self.pupil_left_coords()
             x_right, y_right = self.pupil_right_coords()
+            
             cv2.line(frame, (x_left - 5, y_left), (x_left + 5, y_left), color)
             cv2.line(frame, (x_left, y_left - 5), (x_left, y_left + 5), color)
             cv2.line(frame, (x_right - 5, y_right), (x_right + 5, y_right), color)
             cv2.line(frame, (x_right, y_right - 5), (x_right, y_right + 5), color)
-
-        return frame
+        
+        if self.eye_left is None or self.eye_right is None:
+            return frame, None, None
+        else:
+            return frame, self.eye_left.pupil.iris_frame.shape, self.eye_right.pupil.iris_frame.shape
