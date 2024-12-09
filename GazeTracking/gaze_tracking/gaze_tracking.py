@@ -20,10 +20,10 @@ class GazeTracking(object):
         self.eye_right = None
         self.calibration = Calibration()
         
-        self.upper_border = 0.001
-        self.bottom_border = 0.99
-        self.right_border = 0.99
-        self.left_border = 0.001
+        self.upper_border = 0.30
+        self.bottom_border = 0.70
+        self.right_border = 0.66
+        self.left_border = 0.34
         self.blinking_ratio = 1.5
         
         self.landmark_state = 0

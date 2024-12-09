@@ -31,11 +31,32 @@ import numpy as np
 # else:
 #     print("True")
 
-def test_func():
-    for i in range(100):
-        yield i
-        continue
+# def test_func():
+#     for i in range(100):
+#         yield i
+#         continue
 
-if __name__ == "__main__":
-    a = test_func()
-    print(a)
+# if __name__ == "__main__":
+#     a = test_func()
+#     print(a)
+
+video_path = "C:/Users/U/Desktop/BCML/Drone/DJI_20240629161442_Ins2-P4P.MP4"
+cap = cv2.VideoCapture(video_path)
+
+cap.set(cv2.CAP_PROP_POS_FRAMES, 11000)
+ret, frame = cap.read()
+
+x, y, w, h = 1180, 760, 17, 17
+cropped_image = frame[y:y+h, x:x+w]
+
+cv2.imshow("", cropped_image)
+cv2.waitKey(1000)
+cv2.destroyAllWindows()
+
+output_path = f"C:/Users/U/Desktop/BCML/Drone/test_video_11000.png"
+cv2.imwrite(output_path, frame)
+
+# for i in range(100):
+#     ret, frame = cap.read()
+#     output_path = f"C:/Users/U/Desktop/BCML/Drone/extract/test_video_image_{10000+i}.png"
+#     cv2.imwrite(output_path, frame)
