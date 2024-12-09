@@ -17,16 +17,16 @@ class Eye(object):
         self.pupil = None
         self.landmark_points = None
         # Eyes with around skin segments
-        # self.LEFT_EYE_POINTS = [464, 413, 441, 442, 443, 444, 445, 342, 446, 261, 448, 449, 450, 451, 452, 453]
-        # self.RIGHT_EYE_POINTS = [226, 113, 225, 224, 223, 222, 221, 189, 244, 233, 232, 231, 230, 229, 228, 31]
+        self.LEFT_EYE_POINTS = [464, 413, 441, 442, 443, 444, 445, 342, 446, 261, 448, 449, 450, 451, 452, 453]
+        self.RIGHT_EYE_POINTS = [226, 113, 225, 224, 223, 222, 221, 189, 244, 233, 232, 231, 230, 229, 228, 31]
         
         # Only eyes
         # self.LEFT_EYE_POINTS = [263, 466, 388, 387, 386, 385, 384, 398, 362, 382, 381, 380, 374, 373, 390, 249]
         # self.RIGHT_EYE_POINTS = [33, 246, 161, 160, 159, 158, 157, 173, 133, 155, 154, 153, 145, 144, 163, 7]
         
         # Eyes with eyelid
-        self.LEFT_EYE_POINTS = [359, 467, 260, 259, 257, 258, 286, 414, 463, 341, 256, 252, 253, 254, 339, 255]
-        self.RIGHT_EYE_POINTS = [243, 190, 56, 28, 27, 29, 30, 247, 130, 25, 110, 24, 23, 22, 26, 112]
+        # self.LEFT_EYE_POINTS = [359, 467, 260, 259, 257, 258, 286, 414, 463, 341, 256, 252, 253, 254, 339, 255]
+        # self.RIGHT_EYE_POINTS = [243, 190, 56, 28, 27, 29, 30, 247, 130, 25, 110, 24, 23, 22, 26, 112]
         
         self._analyze(original_frame, landmarks, side, calibration)
         self.blinking_state = 0

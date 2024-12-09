@@ -97,7 +97,10 @@ while True:
     elif gaze.is_center():
         text = "Focus"
     else:
-        text = "No iris recognition"
+        if left_eye_size != None and right_eye_size != None:
+            text = "Distracted"
+        else:
+            text = "No iris recognition"
     
     if text == "Focus":
         temp_list.append(1)
