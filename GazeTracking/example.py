@@ -49,6 +49,7 @@ else:
 fps = 30
 
 temp_list = []
+session_index = []
 
 processed_frame_count = 0
 
@@ -59,7 +60,7 @@ start_time = time.time()
 
 while True:
     if video_select == 3:
-        if processed_frame_count == 30*30*6:
+        if time.time() - start_time >= 180:
             break
     if video_select == 2:
         if processed_frame_count == 30*29+2550:
@@ -108,6 +109,13 @@ while True:
         temp_list.append(-1)
     else:
         temp_list.append(0)
+    
+    if time.time() - start_time <= 30:
+        session_index.append(0)
+    elif 30 < time.time() - start_time <= 150:
+        session_index.append(1)
+    else:
+        session_index.append(0)
     
     # if len(temp_list) >= 180*fps:
     #     temp_list = temp_list[1:]
@@ -182,8 +190,19 @@ while True:
         break
 
 if label:
-    final_check = [1 for i in range(len(temp_list)) if temp_list[i] == label[i]]
-    final_accuracy = round(sum(final_check)/(len(temp_list)), 2)*100
+    final_check = []
+    for i in range(len(session_index)):
+        if session_index[i] == 0:
+            if temp_list[i] == 1:
+                final_check.append(1)
+            else:
+                final_check.append(0)
+        else:
+            if temp_list[i] == 1:
+                final_check.append(0)
+            else:
+                final_check.append(1)
+    final_accuracy = round(sum(final_check)/(len(session_index)), 2)*100
     print(f"{'='*60}\nFinal accuracy: {final_accuracy}%\n{'='*60}")
 else:
     final_check = [1 for i in range(30*30*6) if temp_list[i] == label[i]]
