@@ -200,8 +200,10 @@ if label:
         else:
             if temp_list[i] == 1:
                 final_check.append(0)
-            else:
+            elif temp_list[i] == 0:
                 final_check.append(1)
+            else:
+                final_check.append(0)
     final_accuracy = round(sum(final_check)/(len(session_index)), 2)*100
     print(f"{'='*60}\nFinal accuracy: {final_accuracy}%\n{'='*60}")
 else:
