@@ -8,8 +8,10 @@ from gaze_tracking import GazeTracking
 import numpy as np
 import time
 import matplotlib.pyplot as plt
+import winsound as sd
+import statistics
 
-video_select = int(input("0 for IITP_눈_돌리기.mp4\n1 for IITP_고개_돌리기.mp4\n2  for webcam with rolling_eye label\n3 for 3min experiment\n4 for EMMA_video_2.mp4\nany keys for without label\ninput: "))
+video_select = int(input("0 for IITP_눈_돌리기.mp4\n1 for IITP_고개_돌리기.mp4\n2  for webcam with rolling_eye label\n3 for 3min experiment\n4 for EMMA_video_3.mp4\nany keys for without label\ninput: "))
 
 gaze = GazeTracking()
 rolling_eye = "../data/IITP_눈_돌리기.mp4"
@@ -17,7 +19,6 @@ label4rolling_eye = [1 for i in range(30*30)] + [0 for i in range(3550)]
 rolling_head = "../data/IITP_고개_돌리기.mp4"
 label4rolling_head = [1 for i in range(30*29)] + [0 for i in range(3564)]
 exp_tutorial = [1 for i in range(30*30)] + [0 for i in range(30*30*4)] + [ 1 for i in range(30*30)]
-label4emma2 = [1 for i in range(30*30)] + [0 for i in range(int(30*30*3))] + [1 for i in range(397)]
 camera = 0
 
 if video_select == 0:
@@ -40,8 +41,8 @@ elif video_select == 3:
     label = exp_tutorial
 elif video_select == 4:
     print("start EMMA_video_2.mp4 test")
-    webcam = cv2.VideoCapture("../data/EMMA_video_2.mp4")
-    label = label4emma2
+    webcam = cv2.VideoCapture("../data/EMMA_video_3.mp4")
+    label = True
 else:
     print("\nstart webcam without label\n")
     webcam = cv2.VideoCapture(0)
@@ -58,12 +59,36 @@ min1_accuracy = 0
 min3_accuracy = 0
 start_time = time.time()
 
+session_1 = session_2 = session_3 = session_4 = session_5 = session_6 = False
+
+final_acc = []
+
 while True:
+    if not session_1 and abs(time.time()-start_time-30) <= 1:
+        sd.Beep(1000, 300)
+        session_1 = True
+    elif not session_2 and abs(time.time()-start_time-60) <= 1:
+        sd.Beep(1000, 300)
+        session_2 = True
+    elif not session_3 and abs(time.time()-start_time-90) <= 1:
+        sd.Beep(1000, 300)
+        session_3 = True
+    elif not session_4 and abs(time.time()-start_time-120) <= 1:
+        sd.Beep(1000, 300)
+        session_4 = True
+    elif not session_5 and abs(time.time()-start_time-150) <= 1:
+        sd.Beep(1000, 300)
+        session_5 = True
+    
+    
     if video_select == 3:
         if time.time() - start_time >= 180:
             break
     if video_select == 2:
         if processed_frame_count == 30*29+2550:
+            break
+    if video_select == 4:
+        if time.time() - start_time >= 180:
             break
     # We get a new frame from the webcam
     ret, frame = webcam.read()
@@ -92,7 +117,7 @@ while True:
     elif gaze.is_bottom() and not gaze.is_bottom() and gaze.is_upper():
         text = "Distracted"
     elif gaze.is_upper() and not gaze.is_right() and not gaze.is_left():
-        text = "Distractedr"
+        text = "Distracted"
     elif gaze.is_bottom() and not gaze.is_right() and not gaze.is_left():
         text = "Distracted"
     elif gaze.is_center():
@@ -111,39 +136,48 @@ while True:
         temp_list.append(0)
     
     if time.time() - start_time <= 30:
-        session_index.append(0)
-    elif 30 < time.time() - start_time <= 150:
         session_index.append(1)
-    else:
+    elif 30 < time.time() - start_time <= 150:
         session_index.append(0)
+    else:
+        session_index.append(1)
     
     # if len(temp_list) >= 180*fps:
     #     temp_list = temp_list[1:]
     
     if label:
-        if processed_frame_count >= 30*fps:
-            temp_pred = temp_list[-30*fps:]
-            temp_label = label[processed_frame_count-(30*fps):processed_frame_count]
-            temp_total_check = [1 for i in range(30*fps) if temp_pred[i] == temp_label[i]]
-            sec30_accuracy = round(sum(temp_total_check)/(30*fps), 2)*100
-        else:
-            sec30_accuracy = None
-        
-        if processed_frame_count >= 60*fps:
-            temp_pred = temp_list[-(60*fps):]
-            temp_label = label[processed_frame_count-(60*fps):processed_frame_count]
-            temp_total_check = [1 for i in range((60*fps)) if temp_pred[i] == temp_label[i]]
-            min1_accuracy = round(sum(temp_total_check)/(60*fps), 2)*100
-        else:
-            min1_accuracy = None
-        
-        if processed_frame_count >= 180*fps:
-            temp_pred = temp_list[-180*fps:]
-            temp_label = label[processed_frame_count-180*fps:processed_frame_count]
-            temp_total_check = [1 for i in range(180*fps) if temp_pred[i] == temp_label[i]]
-            min3_accuracy = round(sum(temp_total_check)/(180*fps), 2)*100
-        else:
-            min3_accuracy = None
+        if (time.time() - start_time) % 1 <= 0.01:
+            temp_pred = statistics.mode(temp_list[-fps:])
+            temp_session_index = statistics.mode(session_index[-fps:])
+            if temp_pred == temp_session_index:
+                one_sec_acc = 1
+            else:
+                one_sec_acc = 0
+            final_acc.append(one_sec_acc)
+            
+            if time.time() - start_time >= 30:
+                temp_pred = temp_list[-30*fps:]
+                temp_session_index = session_index[-30*fps:]
+                temp_total_check = [1 for i in range(len(temp_pred)) if temp_pred[i] == temp_session_index[i]]
+                sec30_accuracy = round(sum(temp_total_check)/(30*fps), 2)*100
+            else:
+                sec30_accuracy = None
+            
+            if time.time() - start_time >= 60:
+                temp_pred = temp_list[-60*fps:]
+                temp_session_index = session_index[-60*fps:]
+                temp_total_check = [1 for i in range(len(temp_pred)) if temp_pred[i] == temp_session_index[i]]
+                min1_accuracy = round(sum(temp_total_check)/(60*fps), 2)*100
+            else:
+                min1_accuracy = None
+            
+            if time.time() - start_time >= 180:
+                temp_pred = temp_list[-180*fps:]
+                temp_session_index = session_index[-180*fps:]
+                temp_total_check = [1 for i in range(len(temp_pred)) if temp_pred[i] == temp_session_index[i]]
+                min3_accuracy = round(sum(temp_total_check)/(180*fps), 2)*100
+            else:
+                min3_accuracy = None
     else:
         sec30_accuracy = "No label"
         min1_accuracy = "No label"
@@ -163,7 +197,7 @@ while True:
     if right_eye_size is None or left_eye_size is None:
         pass
     else:
-        if right_eye_size[0] < 30 or left_eye_size[0] < 30 or right_eye_size[1] < 40 or left_eye_size[1] < 40:
+        if right_eye_size[0] < 65 or left_eye_size[0] < 65 or right_eye_size[1] < 85 or left_eye_size[1] < 85:
             cv2.putText(frame, "Bad environment",
                         (90, 350), cv2.FONT_HERSHEY_DUPLEX, 1.0, (30, 30, 190), 2)
             cv2.putText(frame, "The face is too far away from camera",
@@ -190,22 +224,8 @@ while True:
         break
 
 if label:
-    final_check = []
-    for i in range(len(session_index)):
-        if session_index[i] == 0:
-            if temp_list[i] == 1:
-                final_check.append(1)
-            else:
-                final_check.append(0)
-        else:
-            if temp_list[i] == 1:
-                final_check.append(0)
-            elif temp_list[i] == 0:
-                final_check.append(1)
-            else:
-                final_check.append(0)
-    final_accuracy = round(sum(final_check)/(len(session_index)), 2)*100
-    print(f"{'='*60}\nFinal accuracy: {final_accuracy}%\n{'='*60}")
+    final_acc_show = sum(final_acc) / len(final_acc) * 100
+    print(f"{'='*60}\nFinal accuracy: {final_acc_show}%\n{'='*60}")
 else:
     final_check = [1 for i in range(30*30*6) if temp_list[i] == label[i]]
     final_accuracy = round(sum(final_check)/(30*30*6), 2) * 100
