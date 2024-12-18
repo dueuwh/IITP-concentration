@@ -20,6 +20,18 @@ class Eye(object):
         self.LEFT_EYE_POINTS = [464, 413, 441, 442, 443, 444, 445, 342, 446, 261, 448, 449, 450, 451, 452, 453]
         self.RIGHT_EYE_POINTS = [226, 113, 225, 224, 223, 222, 221, 189, 244, 233, 232, 231, 230, 229, 228, 31]
         
+        self.LEFT_EYE_HORIZONTAL = [362, 263]
+        self.RIGHT_EYE_HORIZONTAL = [33, 133]
+        
+        self.LEFT_EYE_VERTICAL = [386, 374]
+        self.RIGHT_EYE_VERTICAL = [159, 145]
+        
+        self.eye_h_border = []
+        self.eye_v_border = []
+        
+        self.eye_h_length = 0
+        self.eye_v_length = 0
+        
         # Only eyes
         # self.LEFT_EYE_POINTS = [263, 466, 388, 387, 386, 385, 384, 398, 362, 382, 381, 380, 374, 373, 390, 249]
         # self.RIGHT_EYE_POINTS = [33, 246, 161, 160, 159, 158, 157, 173, 133, 155, 154, 153, 145, 144, 163, 7]
@@ -44,7 +56,7 @@ class Eye(object):
         y = (p1.y + p2.y) / 2
         return (x, y)
 
-    def _isolate(self, frame, landmarks, points):
+    def _isolate(self, frame, landmarks, points, points_h, points_v):
         """Isolate an eye, to have a frame without other part of the face.
 
         Arguments:
@@ -76,8 +88,28 @@ class Eye(object):
         self.frame = eye[min_y:max_y, min_x:max_x]
         self.origin = (min_x, min_y)
 
-        height, width = self.frame.shape[:2]
-        self.center = (width / 2, height / 2)
+        h_left = (int(landmarks.multi_face_landmarks[0].landmark[points_h[0]].x * frame.shape[1] - min_x), 
+                  int(landmarks.multi_face_landmarks[0].landmark[points_h[0]].y * frame.shape[0] - min_y)
+                  )
+        h_right = (int(landmarks.multi_face_landmarks[0].landmark[points_h[1]].x * frame.shape[1] - min_x), 
+                   int(landmarks.multi_face_landmarks[0].landmark[points_h[1]].y * frame.shape[0] - min_y)
+                   )
+        
+        self.eye_h_border = [h_left, h_right]
+        self.eye_h_length = h_right[0] - h_left[0]
+        
+        v_top = (int(landmarks.multi_face_landmarks[0].landmark[points_v[0]].x * frame.shape[1] - min_x), 
+                 int(landmarks.multi_face_landmarks[0].landmark[points_v[0]].y * frame.shape[0] - min_y)
+                 )
+        v_bottom = (int(landmarks.multi_face_landmarks[0].landmark[points_v[1]].x * frame.shape[1] - min_x), 
+                    int(landmarks.multi_face_landmarks[0].landmark[points_v[1]].y * frame.shape[0] - min_y)
+                    )
+        
+        self.eye_v_border = [v_top, v_bottom]
+        self.eye_v_length = v_bottom[1] - v_top[1]
+        
+        # height, width = self.frame.shape[:2]
+        # self.center = (width / 2, height / 2)
 
     def _blinking_ratio(self, landmarks, points):
         """Calculates a ratio that can indicate whether an eye is closed or not.
@@ -118,13 +150,17 @@ class Eye(object):
         """
         if side == 0:
             points = self.LEFT_EYE_POINTS
+            horizontal_points = self.LEFT_EYE_HORIZONTAL
+            vertical_points = self.LEFT_EYE_VERTICAL
         elif side == 1:
             points = self.RIGHT_EYE_POINTS
+            horizontal_points = self.RIGHT_EYE_HORIZONTAL
+            vertical_points = self.RIGHT_EYE_VERTICAL
         else:
             raise ValueError(f"size: {side} wrong value")
 
         self.blinking = self._blinking_ratio(landmarks, points)
-        self._isolate(original_frame, landmarks, points)
+        self._isolate(original_frame, landmarks, points, horizontal_points, vertical_points)
 
         if not calibration.is_complete():
             calibration.evaluate(self.frame, side)

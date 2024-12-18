@@ -20,13 +20,14 @@ class GazeTracking(object):
         self.eye_right = None
         self.calibration = Calibration()
         
-        self.upper_border = 0.40
-        self.bottom_border = 0.60
+        self.upper_border = 0.30
+        self.bottom_border = 0.70
         self.right_border = 0.70
         self.left_border = 0.30
         self.blinking_ratio = 1.5
         
         self.landmark_state = 0
+        
         # 0: self._predictor.process passed and landmarks.multi_face_landmarks is True
         # 1: self._predictor.process passed but landmarks.multi_face_landmarks is False
         # 2: self._predictor.process cause Error
@@ -99,8 +100,8 @@ class GazeTracking(object):
         the center is 0.5 and the extreme left is 1.0
         """
         if self.pupils_located:
-            pupil_left = self.eye_left.pupil.x / (self.eye_left.center[0] * 2)
-            pupil_right = self.eye_right.pupil.x / (self.eye_right.center[0] * 2)
+            pupil_left = (self.eye_left.pupil.x - self.eye_left.eye_h_border[0][0]) / self.eye_left.eye_h_length
+            pupil_right = (self.eye_right.pupil.x - self.eye_right.eye_h_border[0][0]) / self.eye_right.eye_h_length
             return (pupil_left + pupil_right) / 2
 
     def vertical_ratio(self):
@@ -109,8 +110,8 @@ class GazeTracking(object):
         the center is 0.5 and the extreme bottom is 1.0
         """
         if self.pupils_located:
-            pupil_left = self.eye_left.pupil.y / (self.eye_left.center[1] * 2 - 10)
-            pupil_right = self.eye_right.pupil.y / (self.eye_right.center[1] * 2 - 10)
+            pupil_left = (self.eye_left.pupil.y - self.eye_left.eye_v_border[0][1]) / self.eye_left.eye_v_length
+            pupil_right = (self.eye_right.pupil.y - self.eye_right.eye_v_border[0][1]) / self.eye_right.eye_v_length
             return (pupil_left + pupil_right) / 2
 
     def is_right(self):

@@ -223,6 +223,7 @@ while True:
     if cv2.waitKey(1) == 27:
         break
 
+
 if label:
     final_acc_show = sum(final_acc) / len(final_acc) * 100
     print(f"{'='*60}\nFinal accuracy: {final_acc_show}%\n{'='*60}")
