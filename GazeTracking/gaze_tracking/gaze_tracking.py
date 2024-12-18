@@ -99,8 +99,8 @@ class GazeTracking(object):
         the center is 0.5 and the extreme left is 1.0
         """
         if self.pupils_located:
-            pupil_left = self.eye_left.pupil.x / (self.eye_left.center[0] * 2 - 10)
-            pupil_right = self.eye_right.pupil.x / (self.eye_right.center[0] * 2 - 10)
+            pupil_left = self.eye_left.pupil.x / (self.eye_left.center[0] * 2)
+            pupil_right = self.eye_right.pupil.x / (self.eye_right.center[0] * 2)
             return (pupil_left + pupil_right) / 2
 
     def vertical_ratio(self):
