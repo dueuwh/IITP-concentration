@@ -10,6 +10,9 @@ import time
 import matplotlib.pyplot as plt
 import winsound as sd
 import statistics
+import sys
+
+
 
 video_select = int(input("0 for IITP_눈_돌리기.mp4\n1 for IITP_고개_돌리기.mp4\n2  for webcam with rolling_eye label\n3 for 3min experiment\n4 for EMMA_video_3.mp4\nany keys for without label\ninput: "))
 
@@ -47,6 +50,11 @@ else:
     print("\nstart webcam without label\n")
     webcam = cv2.VideoCapture(0)
     label = False
+
+if not webcam.isOpened():
+    print("카메라를 열 수 없습니다. 카메라가 다른 프로세스에서 사용 중인지 확인해보세요.")
+    sys.exit()
+
 fps = 30
 
 temp_list = []
