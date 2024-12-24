@@ -108,7 +108,7 @@ class Eye(object):
         self.eye_v_border = [v_top, v_bottom]
         self.eye_v_length = v_bottom[1] - v_top[1]
         if self.eye_v_length <= 0:
-            self.eye_v_length = 4(max_y-min_y)/5
+            self.eye_v_length = 4*(max_y-min_y)/5
         
         # height, width = self.frame.shape[:2]
         # self.center = (width / 2, height / 2)
