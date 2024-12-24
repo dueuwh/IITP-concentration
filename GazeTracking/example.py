@@ -146,7 +146,7 @@ while True:
     #     temp_list = temp_list[1:]
     
     if label:
-        if (time.time() - start_time) % 1 <= 0.01:
+        if (time.time() - start_time) % 1 <= 0.1:
             temp_pred = statistics.mode(temp_list[-fps:])
             temp_session_index = statistics.mode(session_index[-fps:])
             if temp_pred == temp_session_index:
