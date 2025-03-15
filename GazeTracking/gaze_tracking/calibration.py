@@ -10,7 +10,7 @@ class Calibration(object):
     """
 
     def __init__(self):
-        self.nb_frames = 20
+        self.nb_frames = 30  # set for FPS 30 camera
         self.thresholds_left = []
         self.thresholds_right = []
 
@@ -36,7 +36,7 @@ class Calibration(object):
 
         Argument:
             frame (numpy.ndarray): Binarized iris frame
-        """
+        """ 
         frame = frame[5:-5, 5:-5]
         height, width = frame.shape[:2]
         nb_pixels = height * width
@@ -51,7 +51,7 @@ class Calibration(object):
         Argument:
             eye_frame (numpy.ndarray): Frame of the eye to be analyzed
         """
-        average_iris_size = 0.48
+        average_iris_size = 0.27
         trials = {}
 
         for threshold in range(5, 100, 5):
@@ -60,6 +60,24 @@ class Calibration(object):
 
         best_threshold, iris_size = min(trials.items(), key=(lambda p: abs(p[1] - average_iris_size)))
         return best_threshold
+
+    @staticmethod
+    def find_best_threshold_mle(eye_frame):
+        """Calculates the optimal threshold to binarize the
+        frame for the given eye using Maximum Likelihood Estimation
+
+        Parameters
+        ----------
+        eye_frame : numpy.ndarray
+            Frame of the eye to be analyzed
+
+        Returns
+        -------
+        beset_threshold : int
+            Int threshold for binarize
+        """
+        
+        
 
     def evaluate(self, eye_frame, side):
         """Improves calibration by taking into consideration the
