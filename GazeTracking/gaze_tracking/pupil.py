@@ -42,7 +42,7 @@ class Pupil(object):
             eye_frame (numpy.ndarray): Frame containing an eye and nothing else
         """
         self.iris_frame = self.image_processing(eye_frame, self.threshold)
-
+        
         contours, _ = cv2.findContours(self.iris_frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)[-2:]
         contours = sorted(contours, key=cv2.contourArea)
 
